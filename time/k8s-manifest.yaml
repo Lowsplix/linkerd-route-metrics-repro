@@ -15,6 +15,8 @@ spec:
       labels:
         app: time-service
         component: backend
+      annotations:
+        linkerd.io/inject: enabled
     spec:
       containers:
         - name: time-service
@@ -75,3 +77,15 @@ spec:
         - kind: Service
           name: time-service
           port: 9090
+---
+# apiVersion: linkerd.io/v1alpha2
+# kind: ServiceProfile
+# metadata:
+#   name: time-service.default.svc.cluster.local
+#   namespace: default
+# spec:
+#   routes:
+#     - name: GetCurrentTime
+#       condition:
+#         method: POST
+#         pathRegex: /smpl\.api.time\.v1\.TimeService/GetCurrentTime

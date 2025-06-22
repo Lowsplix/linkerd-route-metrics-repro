@@ -2,10 +2,8 @@
 FROM golang:alpine AS build-env
 RUN apk --no-cache add build-base
 ADD . /src
-# Copy the workspace file from parent directory
-COPY ../go.work /src/
 WORKDIR /src
-RUN go get ./... && go build -o goapp
+RUN go get ./...&& go build -o goapp
 
 # final stage
 FROM alpine

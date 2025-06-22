@@ -14,3 +14,5 @@ require (
 	golang.org/x/text v0.22.0 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 )
+
+replace github.com/kostyay/grpc-web-example/time/goclient => ./goclient

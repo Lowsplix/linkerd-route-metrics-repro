@@ -23,8 +23,6 @@ tasks:
     deps:
       - build:client
       - build:server
-      - build:server-go
-      - build:client-go
     cmds:
       - 'echo "Ensure you''re on >= 25.6.1: you''re on $(linkerd version --client | grep -oE ''edge-.+$'')"'
       - k3d cluster create -s 1 linkerd-bug-repro
@@ -34,7 +32,7 @@ tasks:
       - k3d image import -c linkerd-bug-repro time-client
       - k3d image import -c linkerd-bug-repro time-service
       - kubectl wait --for=condition=Ready --namespace linkerd --all pod
-      - kubectl apply -f time-service/k8s-manifest.yaml
+      - kubectl apply -f time/k8s-manifest.yaml
       - kubectl apply -f time-client/k8s-manifest.yaml
 
   teardown:
