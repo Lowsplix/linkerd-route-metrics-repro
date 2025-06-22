@@ -31,7 +31,7 @@ tasks:
       - linkerd install | kubectl apply -f -
       - k3d image import -c linkerd-bug-repro time-client
       - k3d image import -c linkerd-bug-repro time-service
-      - kubectl wait --for=condition=Ready --namespace linkerd --all pod
+      - kubectl wait --for=condition=Ready --namespace linkerd --all pod --timeout=5m
       - kubectl apply -f time/k8s-manifest.yaml
       - kubectl apply -f time-client/k8s-manifest.yaml
 
