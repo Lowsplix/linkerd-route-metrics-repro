@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: time-client
+  labels:
+    app: time-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: time-client
+  template:
+    metadata:
+      labels:
+        app: time-client
+      annotations:
+        linkerd.io/inject: enabled
+    spec:
+      containers:
+        - name: time-client
+          image: time-client:v1.0.1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          command:
+            - ./time-client
+            - -server=time-service:9090
+            - -rate=2s
+            - -timeout=5s
+            - -http-port=:8080
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: time-client
+  labels:
+    app: time-client
+spec:
+  selector:
+    app: time-client
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP
+
+---
+# apiVersion: gateway.networking.k8s.io/v1
+# kind: HTTPRoute
+# metadata:
+#   name: time-client
+#   labels:
+#     app: time-client
+# spec:
+#   parentRefs:
+#     - group: ""
+#       name: time-client
+#       kind: Service
+#       port: 8080
+#   rules:
+#     - matches:
+#         - path:
+#             type: PathPrefix
+#             value: "/"
+#       backendRefs:
+#         - name: time-client
+#           port: 8080

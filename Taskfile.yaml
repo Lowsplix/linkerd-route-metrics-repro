@@ -1,0 +1,43 @@
+version: 3
+
+silent: true
+
+tasks:
+  build:client:
+    desc: "Build the client"
+    cmds:
+      - docker build -t time-client  -f time-client/Dockerfile .
+
+  build:server:
+    desc: "Build the server"
+    cmds:
+      - docker build -t time-service -f time/Dockerfile ./time
+
+  setup:
+    desc: "Set up the reproduction"
+    preconditions:
+      - sh: which linkerd
+        msg: "You need linkerd to be installed"
+      - sh: which k3d
+        msg: "You need k3d to be installed"
+    deps:
+      - build:client
+      - build:server
+      - build:server-go
+      - build:client-go
+    cmds:
+      - 'echo "Ensure you''re on >= 25.6.1: you''re on $(linkerd version --client | grep -oE ''edge-.+$'')"'
+      - k3d cluster create -s 1 linkerd-bug-repro
+      - kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
+      - linkerd install --crds | kubectl apply -f -
+      - linkerd install | kubectl apply -f -
+      - k3d image import -c linkerd-bug-repro time-client
+      - k3d image import -c linkerd-bug-repro time-service
+      - kubectl wait --for=condition=Ready --namespace linkerd --all pod
+      - kubectl apply -f time-service/k8s-manifest.yaml
+      - kubectl apply -f time-client/k8s-manifest.yaml
+
+  teardown:
+    desc: "Teardown the reproduction"
+    cmds:
+      - k3d cluster delete linkerd-bug-repro
